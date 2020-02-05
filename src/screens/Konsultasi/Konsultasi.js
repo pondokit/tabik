@@ -21,7 +21,30 @@ const { width, height } = Dimensions.get('window');
 class Fatwa extends Component {
 
   ShareMessage = () => {
-    Share.share({title: "Konsultasi Islam", message: "Pesan Disini" })
+    const konsultasi = this.props.navigation.getParam('konsultasi');
+
+    const text = konsultasi.content.rendered
+                  .replace(/<(div|br|p)[^>]{0,}>/ig, '\n')
+                  .replace(/<(\/div|\/p|u|\/u|ol|\/ol|ul|\/ul|\/li|a|\/a|img|iframe|\/iframe)[^>]{0,}>/ig, '')
+                  .replace(/<(strong)[^>]{0,}>/ig, ' *')
+                  .replace(/<(\/strong)[^>]{0,}>/ig, '* ')
+                  .replace(/<(em)[^>]{0,}>/ig, ' _')
+                  .replace(/<(\/em)[^>]{0,}>/ig, '_ ')
+                  .replace(/<(li)[^>]{0,}>/ig, '- ')
+                  .replace(/&nbsp;/ig, '~')
+                  .replace(/&(#8220|#8221);/ig, '"')
+                  .replace(/&#8217;/ig, `'`)
+                  .replace(/&#8211;/ig, `-`);
+
+    const message = `Artikel Dari ${konsultasi.link} \n\n`
+                    + "Download aplikasi Tabik Ustadz di playstore, \n https://play.google.com/store/apps/details?id=com.tabik&hl=in \n"
+                    + text
+
+    Share.share({
+      title: konsultasi.title.rendered, 
+      message: message,
+      url: "https://play.google.com/store/apps/details?id=com.tabik&hl=in"
+    })
     .then(result => console.log(result))
     .catch(errorMsg => console.log(errorMsg));
   }

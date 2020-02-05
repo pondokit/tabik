@@ -25,7 +25,30 @@ const { width, height } = Dimensions.get('window');
 class Fatwa extends Component {
 
   ShareMessage = () => {
-    Share.share({title: "Fatwa Islam", message: "Pesan Disini" })
+    const fatwa = this.props.navigation.getParam('fatwa');
+
+    const text = fatwa.content.rendered
+                  .replace(/<(div|br|p)[^>]{0,}>/ig, '\n')
+                  .replace(/<(\/div|\/p|u|\/u|ol|\/ol|ul|\/ul|\/li|a|\/a|img|iframe|\/iframe)[^>]{0,}>/ig, '')
+                  .replace(/<(strong)[^>]{0,}>/ig, ' *')
+                  .replace(/<(\/strong)[^>]{0,}>/ig, '* ')
+                  .replace(/<(em)[^>]{0,}>/ig, ' _')
+                  .replace(/<(\/em)[^>]{0,}>/ig, '_ ')
+                  .replace(/<(li)[^>]{0,}>/ig, '- ')
+                  .replace(/&nbsp;/ig, '~')
+                  .replace(/&(#8220|#8221);/ig, '"')
+                  .replace(/&#8217;/ig, `'`)
+                  .replace(/&#8211;/ig, `-`);
+
+    const message = `Artikel Dari ${fatwa.link} \n\n`
+                    + "Download aplikasi Tabik Ustadz di playstore, \n https://play.google.com/store/apps/details?id=com.tabik&hl=in"
+                    + text
+
+    Share.share({
+      title: fatwa.title.rendered, 
+      message: message,
+      url: "https://play.google.com/store/apps/details?id=com.tabik&hl=in"
+    })
     .then(result => console.log(result))
     .catch(errorMsg => console.log(errorMsg));
   }
@@ -58,6 +81,9 @@ class Fatwa extends Component {
               >
               </ImageBackground>
             </View>
+
+            {/*<Text>{JSON.stringify(fatwa)}</Text>*/}
+
             <View style={[styles.flex, styles.contentHeader]}>
               <Text style={styles.title}>{fatwa.title.rendered}</Text>
               <View style={[styles.row,{ marginVertical: 36 / 2 }]}>
