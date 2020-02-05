@@ -24,6 +24,11 @@ import * as Font from 'expo-font';
 import HTMLView from 'react-native-htmlview';
 import { WebView } from 'react-native-webview';
 import Icon from "react-native-vector-icons/MaterialIcons";
+import AsyncStorage from '@react-native-community/async-storage';
+import GetLocation from 'react-native-get-location';
+
+import {Loading} from './components/Loading';
+
 let d     = new Date();
 const today = d.getFullYear()+'-'+(d.getMonth() + 1)+'-'+d.getDate();
 
@@ -35,21 +40,25 @@ class Home extends Component {
     super(props);
     // let date  = new Date();
     // var zone  = date.getTimezoneOffset() / -60;
-    console.log('Constructor running ')
+
     this.state = {
-      tgl         : "",
-      ini         : '2019-11-20',
-      hari        : "",
+      tgl         : '',
+      hari        : '',
       today       : '',
       posts       : [],
       jadwal      : false,
       posts2      : [],
-      wilayah     : 'Makassar',
-      zoneTime    : '8',
-      latitude    : '-5.147',//Initial Latitude
+      wilayah     : '',
+      provinsi    : '',
+      zoneTime    : '',
+      latitude    : '',
+      longitude   : '',
       selectDay   : today.toString(),
-      longitude   : '119.432',//Initial Longitude
-      jamSekarang : ""
+      jamSekarang : '',
+      loading     : {
+        fatwa       : true,
+        konsultasi  : true,
+      }
     };
   }
 
@@ -60,67 +69,111 @@ class Home extends Component {
       'Montserrat-Bold': require('../../../assets/fonts/Montserrat-Bold.ttf'),
       'Montserrat-Regular': require('../../../assets/fonts/Montserrat-Regular.ttf'),
     });
-    setInterval(function(){
-      var jam = new Date();
-      var min = jam.getMinutes();
-      if (min < 10) {
-          min = "0" + min;
-      }
-      var hour = jam.getHours();
-      if (hour < 10) {
-          hour = "0" + hour;
-      }
-      this.setState({ jamSekarang: hour + ':' + min });
+
+    setInterval(
+      function(){
+        var jam = new Date();
+        var min = jam.getMinutes();
+        if (min < 10) {
+            min = "0" + min;
+        }
+        var hour = jam.getHours();
+        if (hour < 10) {
+            hour = "0" + hour;
+        }
+        this.setState({ jamSekarang: hour + ':' + min });
     }.bind(this), 1000);
 
-    this.getJadwal();
-    this.getWaktu();
     this.getFatwa();
     this.getKonsultasi();
+    this.getWaktu();
     this.getLocation();
   };
 
   // Get Another Function
   getJadwal() {
-     let formdata = new FormData();
-     formdata.append('timezone', this.state.zoneTime);
-     formdata.append('act', 'TANGGALM');
-     formdata.append('wilayah', this.state.wilayah);
-     formdata.append('latitude', this.state.latitude);
-     formdata.append('longitude', this.state.longitude);
-     formdata.append('data', this.state.selectDay);
+    let formdata = new FormData();
+    formdata.append('timezone', this.state.zoneTime);
+    formdata.append('act', 'TANGGALM');
+    formdata.append('wilayah', this.state.wilayah);
+    formdata.append('latitude', this.state.latitude);
+    formdata.append('longitude', this.state.longitude);
+    formdata.append('data', this.state.selectDay);
 
-      axios({
-        url: 'https://krfdsawi.stiba.ac.id/wss/',
-        method: 'post',
-        data: formdata,
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }).then(res => {
-        console.log(res.response.data.info)
-        // const jadwals = res.data;
-        // this.setState({ jadwals });
+    axios({
+      url: 'https://krfdsawi.stiba.ac.id/wss/',
+      method: 'post',
+      data: formdata,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }).then(res => {
+      console.log(res.response.data.info)
+      // const jadwals = res.data;
+      // this.setState({ jadwals });
+    })
+    .catch(e => {
+      console.log(e.response.data.data.jadwal)
+      this.setState({jadwal: e.response.data.data.jadwal});
+    })
+  }
+
+  async getLocation() {   
+    const dataWilayah = await this.props.navigation.getParam('data', null);
+    const savedWilayah = await AsyncStorage.getItem('@savedWilayah');
+
+    if(dataWilayah){
+      await AsyncStorage.setItem('@savedWilayah', JSON.stringify(dataWilayah));
+      await this.setState({ 
+        wilayah   : dataWilayah.kota,
+        provinsi  : dataWilayah.prov,
+        latitude  : dataWilayah.lat,
+        longitude : dataWilayah.lng,
+        zoneTime  : dataWilayah.zona
+      });
+      this.props.navigation.getParam('data', null);
+    } else if (savedWilayah) {
+      const s = JSON.parse(savedWilayah);
+      await this.setState({
+        wilayah   : s.kota,
+        provinsi  : s.prov,
+        latitude  : s.lat,
+        longitude : s.lng,
+        zoneTime  : s.zona
+      });
+    } else {
+      await GetLocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 15000,
       })
-      .catch(e => {
-        // console.log(e.response.data.data.jadwal)
-        this.setState({jadwal: e.response.data.data.jadwal});
+      .then(loc => {
+        axios.get(`http://209.97.169.78:98/lokasi/api?lat=${loc.latitude}&lng=${loc.longitude}`)
+        .then(res => {
+          this.setState({
+            wilayah     : res.data.kota,
+            provinsi    : res.data.prov,
+            latitude    : res.data.lat,
+            longitude   : res.data.lng,
+            zoneTime    : res.data.zona,
+          });
+          AsyncStorage.setItem('@savedWilayah', JSON.stringify(res.data));
+        });
       })
-  };
-  getLocation() {
-    const dataWilayah = this.props.navigation.getParam('data', '')
-    console.log(dataWilayah)
-    if(dataWilayah === undefined || dataWilayah === null || dataWilayah === ''){
-      console.log('Data wilayah kosong')
-    }else {
-      this.setState({ wilayah : dataWilayah.nama });
-      this.setState({ latitude : dataWilayah.latitude });
-      this.setState({ longitude : dataWilayah.longitude });
-      this.setState({ zoneTime : dataWilayah.zone });
+      .catch(error => {
+        alert('Lokasi tidak ditemukan, lokasi akan diatur ke default');
+        this.setState({
+          wilayah     : 'Makassar',
+          provinsi    : 'Sulawesi Selatan',
+          latitude    : '-5.147',
+          longitude   : '119.432',
+          zoneTime    : '8',
+        });
+      });
     }
 
-
+    // this.getJadwal();
   }
+
   getWaktu() {
     var days = [
       "Ahad",
@@ -141,28 +194,31 @@ class Home extends Component {
     this.setState({tgl: t.getDate() + ' ' + monthNames[t.getMonth()] + ' ' + t.getFullYear()});
     //
   }
+
   // Get Article
   getFatwa() {
     axios.get('https://wahdah.or.id/wp-json/wp/v2/posts/?categories=317&per_page=5')
       .then( (response) => {
-        this.setState({posts2: response.data});
+        this.setState({posts2: response.data, loading: {fatwa: true} });
       })
       .catch((error) => {
         console.log(error)
       });
   }
+
   getKonsultasi () {
     axios.get('https://wahdah.or.id/wp-json/wp/v2/posts/?categories=491&per_page=5')
       .then( (response) => {
-        this.setState({posts: response.data});
+        this.setState({posts: response.data, loading: {konsultasi: true} });
       })
       .catch((error) => {
         console.log(error)
       });
   }
+
   // Render Article
   renderKonsultasis = () => {
-    return (
+    return this.state.loading.konsultasi ? <Loading /> : (
       <View style={[  styles.column, {paddingTop: 25, height: 530} ]}>
         <FlatList
           scrollEnabled
@@ -175,8 +231,9 @@ class Home extends Component {
         />
       </View>
     );
-  }
-  renderKonsultasi = item => {;
+  };
+
+  renderKonsultasi = item => {
     return (
       <TouchableOpacity style={{marginBottom: 25}} activeOpacity={0.8} onPress={() => this.props.navigation.navigate('Konsultasi', { konsultasi: item })}>
         <View style={{flexDirection: 'row', borderBottomWidth: 1, borderColor: 'rgb(227, 227, 227)'}}>
@@ -188,9 +245,10 @@ class Home extends Component {
         </View>
       </TouchableOpacity>
     )
-  }
+  };
+
   renderFatwas = () => {
-    return (
+    return this.state.loading.fatwa ? <Loading /> : (
       <View style={[ styles.column, {paddingTop: 25, height: 530}]}>
         <FlatList
           scrollEnabled
@@ -204,7 +262,8 @@ class Home extends Component {
         />
       </View>
     );
-  }
+  };
+
   renderFatwa = item => {;
     return (
       <TouchableOpacity style={{marginBottom: 25}} activeOpacity={0.8} onPress={() => this.props.navigation.navigate('Fatwa', { fatwa: item })}>
@@ -217,10 +276,10 @@ class Home extends Component {
         </View>
       </TouchableOpacity>
     )
-  }
+  };
 
   render() {
-    console.log(this.state.wilayah)
+
     return (
       <View style={{flex: 1}}>
         <StatusBar backgroundColor="rgba(40, 201, 192, 0.97)" barStyle="light-content" />
@@ -249,7 +308,7 @@ class Home extends Component {
               </View>
               <View style={[styles.justify2, styles.itemc, {marginTop: 18}]}>
                 <TouchableOpacity onPress={() => this.props.navigation.navigate('SearchLocation')}>
-                  <Text style={{justifyContent: 'center', color: '#fff', textDecorationLine: 'underline'}}>{this.state.wilayah} , Indonesia</Text>
+                  <Text style={{justifyContent: 'center', color: '#fff', textDecorationLine: 'underline'}}>{this.state.wilayah} , {this.state.provinsi}</Text>
                 </TouchableOpacity>
               </View>
               <View style={[styles.justify2, styles.itemc, styles.row, styles.divJam]}>

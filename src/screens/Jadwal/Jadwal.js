@@ -15,6 +15,7 @@ import axios from 'axios';
 import * as Font from 'expo-font';
 import CalendarPicker from 'react-native-calendar-picker';
 import Icon from "react-native-vector-icons/FontAwesome5";
+import AsyncStorage from '@react-native-community/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,28 +27,40 @@ class Jadwal extends Component {
     let d = new Date();
     var today = d.getFullYear()+'-'+(d.getMonth() + 1)+'-'+d.getDate();
 
-    let date = new Date();
-    var zone = date.getTimezoneOffset() / -60;
-
     this.state = {
       today     : '',
       jadwal    : false,
       latitude  : '-5.147',//Initial Latitude
       longitude : '119.432',//Initial Longitude
       wilayah   : 'Makassar',
+      provinsi  : 'Sulawesi Selatan',
       zoneTime  : '8',
       selectDay : today.toString(),
     };
+
     this.onDateChange = this.onDateChange.bind(this);
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     Font.loadAsync({
       'Roboto': require('../../../assets/fonts/Roboto.ttf'),
       'Pacifico': require('../../../assets/fonts/Pacifico.ttf'),
       'Montserrat-Bold': require('../../../assets/fonts/Montserrat-Bold.ttf'),
       'Montserrat-Regular': require('../../../assets/fonts/Montserrat-Regular.ttf'),
     });
+
+    const savedWilayah = await AsyncStorage.getItem('@savedWilayah');
+
+    if (savedWilayah) {
+      const s = JSON.parse(savedWilayah);
+      this.setState({
+        wilayah   : s.kota,
+        provinsi  : s.prov,
+        latitude  : s.lat,
+        longitude : s.lng,
+        zoneTime  : s.zona
+      });
+    }
 
     this.getWaktu();
   };
@@ -63,7 +76,7 @@ class Jadwal extends Component {
 
   getWaktu() {
     let formdata = new FormData();
-    formdata.append('timezone', '8');
+    formdata.append('timezone', this.state.zoneTime);
     formdata.append('act', 'TANGGALM');
     formdata.append('data', this.state.selectDay);
     formdata.append('wilayah', this.state.wilayah);

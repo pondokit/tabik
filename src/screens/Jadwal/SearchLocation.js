@@ -1,7 +1,8 @@
 import React, { Component, Fragment } from 'react'
 import { View } from 'react-native'
+import axios from 'axios';
 import { Container, InputSearch, ValueSearch, Loading } from './components'
-import { db } from '../../service/sqliteSchema'
+// import { db } from '../../service/sqliteSchema'
 
 class SearchLocation extends Component {
 
@@ -31,7 +32,7 @@ class SearchLocation extends Component {
                         {listWilayah.length <= 0 ? null : listWilayah.map(data => (
                             <ValueSearch
                                 onPress={() => navigation.push('Home', { data })}
-                                nama={data.nama}
+                                nama={data.kota + ', ' + data.prov}
                                 key={data.id} />
                         ))}
                     </Container>
@@ -43,23 +44,30 @@ class SearchLocation extends Component {
     onSearch = ({ text }) => {
         this.setState({ namaWialayah : text, isLoading : true })
         setTimeout(() => {
-            this.checkOnDb()
+            // this.checkOnDb()
+            this.getLocation()
         }, 1000)
     }
 
-    checkOnDb = () => {
+    getLocation = () => {
         const { namaWialayah } = this.state
-        db.transaction(txn => {
-            txn.executeSql(
-              `SELECT * FROM wilayah WHERE nama like '%${namaWialayah}%'`,
-              [],
-              (tx, res) => {
-                // console.log(res.rows._array);
-                this.setState({ listWilayah : res.rows._array, isLoading : false })
-              }
-            )
-        })
+        axios.get(`http://209.97.169.78:98/lokasi/api?s=${namaWialayah}`)
+        .then(res => this.setState({ listWilayah : res.data, isLoading : false }));
     }
+
+    // checkOnDb = () => {
+    //     const { namaWialayah } = this.state
+    //     db.transaction(txn => {
+    //         txn.executeSql(
+    //           `SELECT * FROM wilayah WHERE nama LIKE '%${namaWialayah}%' ORDER BY nama LIMIT 10`,
+    //           [],
+    //           (tx, res) => {
+    //             // console.log(res.rows._array);
+    //             this.setState({ listWilayah : res.rows._array, isLoading : false })
+    //           }
+    //         )
+    //     })
+    // }
 
 }
 
