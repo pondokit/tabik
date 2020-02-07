@@ -2,12 +2,12 @@ import React, { Component } from 'react';
 import {
   Text,
   View,
-  Share,
   Image,
   Button,
   Platform,
   Animated,
   StatusBar,
+  Clipboard,
   Dimensions,
   ScrollView,
   StyleSheet,
@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
+import Share from 'react-native-share';
 import HTMLView from 'react-native-htmlview';
 import Icon from "react-native-vector-icons/FontAwesome5";
 
@@ -24,7 +25,7 @@ const { width, height } = Dimensions.get('window');
 
 class Fatwa extends Component {
 
-  ShareMessage = () => {
+  ShareMessage = async () => {
     const fatwa = this.props.navigation.getParam('fatwa');
 
     const text = fatwa.content.rendered
@@ -40,11 +41,14 @@ class Fatwa extends Component {
                   .replace(/&#8217;/ig, `'`)
                   .replace(/&#8211;/ig, `-`);
 
-    const message = `Artikel Dari ${fatwa.link} \n\n`
+    const message = text
+                    + `Artikel Dari ${fatwa.link} \n\n`
                     + "Download aplikasi Tabik Ustadz di playstore, \n https://play.google.com/store/apps/details?id=com.tabik&hl=in"
-                    + text
+    
 
-    Share.share({
+    // await Clipboard.setString(message);
+
+    Share.open({
       title: fatwa.title.rendered, 
       message: message,
       url: "https://play.google.com/store/apps/details?id=com.tabik&hl=in"

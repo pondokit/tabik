@@ -123,6 +123,12 @@ class Jadwal extends Component {
             <Text style={styles.notes}>Sholat terbaik adalah sholat yang dikerjakan diawal waktu.</Text>
           </View>
 
+          <TouchableOpacity style={{flexDirection: 'row', alignSelf: 'center'}} onPress={() => this.props.navigation.navigate('SearchLocation')}>
+            <View style={{paddingVertical: 5, paddingHorizontal: 10, backgroundColor: '#3896A3', borderRadius: 5, elevation: 2}}>
+              <Text style={{justifyContent: 'center', color: '#fff', textAlign: 'center'}}>{this.state.wilayah} , {this.state.provinsi}</Text>
+            </View>
+          </TouchableOpacity>
+
           <View style={{padding: 20,flexDirection: 'row', justifyContent: 'space-around'}}>
             <View style={styles.adzan}>
               <Text style={styles.jam}>{this.state.jadwal.subuh}</Text>

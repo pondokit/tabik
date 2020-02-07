@@ -45,9 +45,7 @@ class Home extends Component {
       tgl         : '',
       hari        : '',
       today       : '',
-      posts       : [],
       jadwal      : false,
-      posts2      : [],
       wilayah     : '',
       provinsi    : '',
       zoneTime    : '',
@@ -55,10 +53,15 @@ class Home extends Component {
       longitude   : '',
       selectDay   : today.toString(),
       jamSekarang : '',
+
       loading     : {
         fatwa       : true,
         konsultasi  : true,
-      }
+      },
+      posts       : {
+        fatwa       : [],
+        konsultasi  : [],
+      },
     };
   }
 
@@ -84,10 +87,11 @@ class Home extends Component {
         this.setState({ jamSekarang: hour + ':' + min });
     }.bind(this), 1000);
 
-    this.getFatwa();
-    this.getKonsultasi();
+    // this.getFatwa();
+    // this.getKonsultasi();
     this.getWaktu();
     this.getLocation();
+    this.getArtikel();
   };
 
   // Get Another Function
@@ -108,12 +112,9 @@ class Home extends Component {
         'Content-Type': 'multipart/form-data'
       }
     }).then(res => {
-      console.log(res.response.data.info)
-      // const jadwals = res.data;
-      // this.setState({ jadwals });
+      // do nothing
     })
     .catch(e => {
-      console.log(e.response.data.data.jadwal)
       this.setState({jadwal: e.response.data.data.jadwal});
     })
   }
@@ -143,13 +144,13 @@ class Home extends Component {
       });
     } else {
       await GetLocation.getCurrentPosition({
-        enableHighAccuracy: true,
+        // enableHighAccuracy: false,
         timeout: 15000,
       })
       .then(loc => {
         axios.get(`http://209.97.169.78:98/lokasi/api?lat=${loc.latitude}&lng=${loc.longitude}`)
-        .then(res => {
-          this.setState({
+        .then( async (res) => {
+          await this.setState({
             wilayah     : res.data.kota,
             provinsi    : res.data.prov,
             latitude    : res.data.lat,
@@ -157,6 +158,7 @@ class Home extends Component {
             zoneTime    : res.data.zona,
           });
           AsyncStorage.setItem('@savedWilayah', JSON.stringify(res.data));
+          this.getJadwal();
         });
       })
       .catch(error => {
@@ -171,7 +173,7 @@ class Home extends Component {
       });
     }
 
-    // this.getJadwal();
+    this.getJadwal();
   }
 
   getWaktu() {
@@ -195,25 +197,21 @@ class Home extends Component {
     //
   }
 
-  // Get Article
-  getFatwa() {
-    axios.get('https://wahdah.or.id/wp-json/wp/v2/posts/?categories=317&per_page=5')
-      .then( (response) => {
-        this.setState({posts2: response.data, loading: {fatwa: true} });
-      })
-      .catch((error) => {
-        console.log(error)
+  // get artikel
+  getArtikel () {
+    let fatwa      = () => { return axios.get('https://wahdah.or.id/wp-json/wp/v2/posts/?categories=317&per_page=5')}
+    let konsultasi = () => { return axios.get('https://wahdah.or.id/wp-json/wp/v2/posts/?categories=491&per_page=5')}
+    
+    axios.all([fatwa(), konsultasi()])
+    .then(axios.spread( (resfatwa, reskonsultasi) => {
+      this.setState({
+        posts: {fatwa: resfatwa.data, konsultasi: reskonsultasi.data},
+        loading: {fatwa: false, konsultasi: false} 
       });
-  }
-
-  getKonsultasi () {
-    axios.get('https://wahdah.or.id/wp-json/wp/v2/posts/?categories=491&per_page=5')
-      .then( (response) => {
-        this.setState({posts: response.data, loading: {konsultasi: true} });
-      })
-      .catch((error) => {
-        console.log(error)
-      });
+    }))
+    .catch((error) => {
+      alert(error.message);
+    });
   }
 
   // Render Article
@@ -224,7 +222,7 @@ class Home extends Component {
           scrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ overflow:'visible'}}
-          data={this.state.posts}
+          data={this.state.posts.konsultasi}
           keyExtractor={(item, index) => `${item.id}`}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: this.scrollX }} }])}
           renderItem={({ item }) => this.renderKonsultasi(item)}
@@ -255,7 +253,7 @@ class Home extends Component {
           showsVerticalScrollIndicator={false}
           vertical={true}
           style={{ overflow:'visible'}}
-          data={this.state.posts2}
+          data={this.state.posts.fatwa}
           keyExtractor={(item, index) => `${item.id}`}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: this.scrollX }} }])}
           renderItem={({ item }) => this.renderFatwa(item)}
@@ -315,23 +313,23 @@ class Home extends Component {
                 <View style={[styles.justify2, styles.itemc, styles.row, styles.jam]}
                 >
                 <View style={[styles.divjadwal]}>
-                  <Text style={[styles.jadwal]}>Subuh</Text>
+                  <Text style={[styles.jadwal]}>{this.state.jadwal.subuh ? 'Subuh' : ''}</Text>
                   <Text style={[styles.jadwal]}>{this.state.jadwal.subuh}</Text>
                 </View>
                 <View style={[styles.divjadwal]}>
-                  <Text style={[styles.jadwal]}>Dhuhur</Text>
+                  <Text style={[styles.jadwal]}>{this.state.jadwal.zuhur ? 'Dhuhur' : ''}</Text>
                   <Text style={[styles.jadwal]}>{this.state.jadwal.zuhur}</Text>
                 </View>
                 <View style={[styles.divjadwal]}>
-                  <Text style={[styles.jadwal]}>Ashar</Text>
+                  <Text style={[styles.jadwal]}>{this.state.jadwal.asar ? 'Ashar' : ''}</Text>
                   <Text style={[styles.jadwal]}>{this.state.jadwal.asar}</Text>
                 </View>
                 <View style={[styles.divjadwal]}>
-                  <Text style={[styles.jadwal]}>Maghrib</Text>
+                  <Text style={[styles.jadwal]}>{this.state.jadwal.magrib ? 'Maghrib' : ''}</Text>
                   <Text style={[styles.jadwal]}>{this.state.jadwal.magrib}</Text>
                 </View>
                 <View style={[styles.divjadwal,{borderRightWidth: 0}]}>
-                  <Text style={[styles.jadwal]}>Isya</Text>
+                  <Text style={[styles.jadwal]}>{this.state.jadwal.isya ? 'Isya' : ''}</Text>
                   <Text style={[styles.jadwal]}>{this.state.jadwal.isya}</Text>
                 </View>
               </View>
