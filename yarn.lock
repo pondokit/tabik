@@ -6046,6 +6046,13 @@ react-native-keyboard-aware-scroll-view@0.9.1:
     prop-types "^15.6.2"
     react-native-iphone-x-helper "^1.0.3"
 
+react-native-material-menu@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-material-menu/-/react-native-material-menu-1.0.0.tgz#bf3d366f7d7044accae1bc6fffe1cf13ac8d88ec"
+  integrity sha512-VUygQvyQQrtM5HBiDLHo0JGoWjegAw/IxpwgXbL9sJfPMDHizx9saZck+IkbTwTvL6PjpnwjI2fuCldoqvDGzQ==
+  dependencies:
+    prop-types "^15.6.0"
+
 react-native-ratings@^6.3.0:
   version "6.5.0"
   resolved "https://registry.yarnpkg.com/react-native-ratings/-/react-native-ratings-6.5.0.tgz#a1606ccba3c5b54eec8e6cfa4765a45cf0e4ab8d"
@@ -6077,6 +6084,11 @@ react-native-screens@^2.0.0-alpha.32:
   integrity sha512-dMw+dGL8UfcS+RQXfUGpdduSkmQN/8l3CJg9+YAwgrgejUpE1YYFnr2gP4GPhie0sBLBdfLj0svNwY1vhnO0Tg==
   dependencies:
     debounce "^1.2.0"
+
+react-native-share-manager@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/react-native-share-manager/-/react-native-share-manager-1.0.6.tgz#d1ad20028a1e1e705df5563a708478d8f8f14a90"
+  integrity sha512-xvP8ll10AXWqs/0v7Av9SnVJGO1QjVzqaVWxxrOCz0buD+UZK1KpJPpjMOi/N9hLh9C5jqWV9JfD7PMXGVoWnQ==
 
 react-native-share@^3.0.0:
   version "3.0.0"
