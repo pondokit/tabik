@@ -144,7 +144,7 @@ class Home extends Component {
       });
     } else {
       await GetLocation.getCurrentPosition({
-        // enableHighAccuracy: false,
+        enableHighAccuracy: true,
         timeout: 15000,
       })
       .then(loc => {
@@ -162,7 +162,7 @@ class Home extends Component {
         });
       })
       .catch(error => {
-        alert('Lokasi tidak ditemukan, lokasi akan diatur ke default');
+        alert('Lokasi gagal ditemukan, silahkan pilih lokasi secara manual');
         this.setState({
           wilayah     : 'Makassar',
           provinsi    : 'Sulawesi Selatan',
@@ -170,6 +170,7 @@ class Home extends Component {
           longitude   : '119.432',
           zoneTime    : '8',
         });
+        this.props.navigation.navigate('SearchLocation');
       });
     }
 

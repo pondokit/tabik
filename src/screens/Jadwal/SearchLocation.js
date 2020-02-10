@@ -52,7 +52,12 @@ class SearchLocation extends Component {
     getLocation = () => {
         const { namaWialayah } = this.state
         axios.get(`http://209.97.169.78:98/lokasi/api?s=${namaWialayah}`)
-        .then(res => this.setState({ listWilayah : res.data, isLoading : false }));
+        .then(res => {
+            this.setState({ listWilayah : res.data, isLoading : false });
+        })
+        .catch(e => {
+            console.log(JSON.stringify(e));
+        });
     }
 
     // checkOnDb = () => {
