@@ -15,7 +15,7 @@
     "axios": "^0.19.2",
     "expo": "^36.0.2",
     "expo-sqlite": "^8.0.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "native-base": "^2.13.8",
     "react": "16.9.0",
     "react-native": "0.61.5",
